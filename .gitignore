@@ -1,0 +1,62 @@
+# These are some examples of commonly ignored file patterns.
+# You should customize this list as applicable to your project.
+# Learn more about .gitignore:
+#     https://www.atlassian.com/git/tutorials/saving-changes/gitignore
+
+# Cursor
+buildServer.json
+
+# IntelliJ
+.idea
+
+# Xcode related
+.DS_Store
+build/
+DerivedData/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.xcscmblueprint
+
+# SwiftPM
+/.swiftpm/xcode/package.xcworkspace/
+.swiftpm
+Package.resolved
+.build/
+# **/.swiftpm/
+# **/.build/
+# **/Package.resolved
+# **/.DS_Store
+# **/xcuserdata/
+# **/.idea/
+# **/*.xcodeproj/xcuserdata/
+# **/*.xcworkspace/xcuserdata/
+
+# Xcode automatic project files
+*.xcworkspace
+*.xcuserstate
+
+# CocoaPods
+Pods/
+Podfile.lock
+
+# Archives and exported builds
+*.xcarchive
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Build pipeline artifacts
+_release/
+exportOptions-*.plist
+
+
+# Simulator stuff
+*.simruntime
+*.simdevice

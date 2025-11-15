@@ -6,12 +6,16 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		678AC01C2EC894F600D1E8A3 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 678AC01B2EC894F600D1E8A3 /* Alamofire */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		678ABED12EC8899100D1E8A3 /* PrintOnDemand.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PrintOnDemand.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		678ABEE32EC8899200D1E8A3 /* Exceptions for "PrintOnDemand" folder in "PrintOnDemand" target */ = {
+		678ABEE32EC8899200D1E8A3 /* Exceptions for "App" folder in "PrintOnDemand" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -21,12 +25,32 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		678ABED32EC8899100D1E8A3 /* PrintOnDemand */ = {
+		678ABED32EC8899100D1E8A3 /* App */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				678ABEE32EC8899200D1E8A3 /* Exceptions for "PrintOnDemand" folder in "PrintOnDemand" target */,
+				678ABEE32EC8899200D1E8A3 /* Exceptions for "App" folder in "PrintOnDemand" target */,
 			);
-			path = PrintOnDemand;
+			path = App;
+			sourceTree = "<group>";
+		};
+		678ABFBF2EC8905F00D1E8A3 /* Utils */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		678ABFC02EC8906C00D1E8A3 /* Common */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Common;
+			sourceTree = "<group>";
+		};
+		678ABFC12EC8909400D1E8A3 /* AppDependencies */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = AppDependencies;
+			sourceTree = "<group>";
+		};
+		678ABFE62EC8927600D1E8A3 /* Remote */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Remote;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -36,6 +60,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				678AC01C2EC894F600D1E8A3 /* Alamofire in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -45,8 +70,12 @@
 		678ABEC82EC8899100D1E8A3 = {
 			isa = PBXGroup;
 			children = (
-				678ABED32EC8899100D1E8A3 /* PrintOnDemand */,
+				678ABED32EC8899100D1E8A3 /* App */,
+				678ABFC12EC8909400D1E8A3 /* AppDependencies */,
+				678ABFC02EC8906C00D1E8A3 /* Common */,
 				678ABED22EC8899100D1E8A3 /* Products */,
+				678ABFE62EC8927600D1E8A3 /* Remote */,
+				678ABFBF2EC8905F00D1E8A3 /* Utils */,
 			);
 			sourceTree = "<group>";
 		};
@@ -74,10 +103,15 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				678ABED32EC8899100D1E8A3 /* PrintOnDemand */,
+				678ABED32EC8899100D1E8A3 /* App */,
+				678ABFBF2EC8905F00D1E8A3 /* Utils */,
+				678ABFC02EC8906C00D1E8A3 /* Common */,
+				678ABFC12EC8909400D1E8A3 /* AppDependencies */,
+				678ABFE62EC8927600D1E8A3 /* Remote */,
 			);
 			name = PrintOnDemand;
 			packageProductDependencies = (
+				678AC01B2EC894F600D1E8A3 /* Alamofire */,
 			);
 			productName = PrintOnDemand;
 			productReference = 678ABED12EC8899100D1E8A3 /* PrintOnDemand.app */;
@@ -107,6 +141,9 @@
 			);
 			mainGroup = 678ABEC82EC8899100D1E8A3;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				678AC01A2EC894F600D1E8A3 /* XCRemoteSwiftPackageReference "Alamofire" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 678ABED22EC8899100D1E8A3 /* Products */;
 			projectDirPath = "";
@@ -147,12 +184,12 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = D94YKQ9RZL;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = PrintOnDemand/Info.plist;
+				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -179,12 +216,12 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = D94YKQ9RZL;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = PrintOnDemand/Info.plist;
+				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -345,6 +382,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		678AC01A2EC894F600D1E8A3 /* XCRemoteSwiftPackageReference "Alamofire" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.10.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		678AC01B2EC894F600D1E8A3 /* Alamofire */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 678AC01A2EC894F600D1E8A3 /* XCRemoteSwiftPackageReference "Alamofire" */;
+			productName = Alamofire;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 678ABEC92EC8899100D1E8A3 /* Project object */;
 }
