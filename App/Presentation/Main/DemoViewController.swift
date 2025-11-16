@@ -167,6 +167,42 @@ class DemoViewController: UIViewController {
     // Current side: Front or Back
     private var isFrontSide: Bool = true
     
+    // Selected product color
+    private var selectedProductColor: ProductColor = .white
+    
+    // Store original background images
+    private var originalFrontImage: UIImage?
+    private var originalBackImage: UIImage?
+    
+    // Color picker title label
+    private let colorPickerTitleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Product Color"
+        label.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        label.textColor = .label
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    // Color picker scroll view
+    private let colorPickerScrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+        scrollView.showsHorizontalScrollIndicator = false
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        return scrollView
+    }()
+    
+    // Color picker stack view
+    private let colorPickerStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .horizontal
+        stackView.spacing = 16
+        stackView.alignment = .fill
+        stackView.distribution = .equalSpacing
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        return stackView
+    }()
+    
     // Haptic feedback generator
     private let hapticGenerator = UIImpactFeedbackGenerator(style: .light)
 
@@ -175,8 +211,9 @@ class DemoViewController: UIViewController {
         hapticGenerator.prepare()
         setupUI()
         updateModeAppearance()
+        updateColorBlend()
     }
-    
+
     private func setupUI() {
         view.backgroundColor = .white
         
@@ -207,7 +244,7 @@ class DemoViewController: UIViewController {
             saveButton.heightAnchor.constraint(equalToConstant: 36)
         ])
         
-        // Add divider below top bar
+        // STEP 2: Add divider below top bar
         view.addSubview(dividerView)
         NSLayoutConstraint.activate([
             dividerView.topAnchor.constraint(equalTo: topBarView.bottomAnchor),
@@ -216,7 +253,7 @@ class DemoViewController: UIViewController {
             dividerView.heightAnchor.constraint(equalToConstant: 1)
         ])
 
-        // Add Front/Back segmented control (only visible in Edit mode)
+        // STEP 3: Add Front/Back segmented control below dividerView
         view.addSubview(frontBackSegmentedControl)
         NSLayoutConstraint.activate([
             frontBackSegmentedControl.topAnchor.constraint(equalTo: dividerView.bottomAnchor, constant: 16),
@@ -224,17 +261,48 @@ class DemoViewController: UIViewController {
             frontBackSegmentedControl.widthAnchor.constraint(equalToConstant: 200),
             frontBackSegmentedControl.heightAnchor.constraint(equalToConstant: 32)
         ])
+        
+        // STEP 4: Add color picker scroll view at the bottom
+        view.addSubview(colorPickerScrollView)
+        NSLayoutConstraint.activate([
+            colorPickerScrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            colorPickerScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            colorPickerScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            colorPickerScrollView.heightAnchor.constraint(equalToConstant: 80),
+        ])
+        
+        // Add color picker stack view to scroll view
+        colorPickerScrollView.addSubview(colorPickerStackView)
+        NSLayoutConstraint.activate([
+            colorPickerStackView.topAnchor.constraint(equalTo: colorPickerScrollView.topAnchor),
+            colorPickerStackView.leadingAnchor.constraint(equalTo: colorPickerScrollView.leadingAnchor, constant: 16),
+            colorPickerStackView.trailingAnchor.constraint(equalTo: colorPickerScrollView.trailingAnchor, constant: -16),
+            colorPickerStackView.bottomAnchor.constraint(equalTo: colorPickerScrollView.bottomAnchor),
+            colorPickerStackView.heightAnchor.constraint(equalTo: colorPickerScrollView.heightAnchor),
+        ])
+        
+        // Setup color options
+        setupColorOptions()
 
-        // Add select image button
+        // STEP 5: Add color picker title label first (this establishes container top)
+        view.addSubview(colorPickerTitleLabel)
+        NSLayoutConstraint.activate([
+            colorPickerTitleLabel.bottomAnchor.constraint(equalTo:  colorPickerScrollView.topAnchor, constant: -16),
+            colorPickerTitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            colorPickerTitleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            colorPickerTitleLabel.heightAnchor.constraint(equalToConstant: 22), // Fixed height based on font size
+        ])
+        
+        // Add select image button (positioned within canvas area)
         view.addSubview(selectImageButton)
         NSLayoutConstraint.activate([
-            selectImageButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -32),
+            selectImageButton.bottomAnchor.constraint(equalTo: colorPickerTitleLabel.topAnchor, constant: -16),
             selectImageButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             selectImageButton.widthAnchor.constraint(equalToConstant: 280),
             selectImageButton.heightAnchor.constraint(equalToConstant: 44),
         ])
 
-        // Add background image view to shirt container (shirt outline)
+        // STEP 6: Add canvas background image view - fills space between frontBackSegmentedControl and colorPicker
         view.addSubview(canvasBackgroundImageView)
         NSLayoutConstraint.activate([
             canvasBackgroundImageView.topAnchor.constraint(equalTo: frontBackSegmentedControl.bottomAnchor, constant: 20),
@@ -595,13 +663,186 @@ class DemoViewController: UIViewController {
     private func updateCanvasBackground() {
         // Update canvas background image based on selected side
         let imageName = isFrontSide ? "front_outline" : "back_outline"
-        canvasBackgroundImageView.image = UIImage(named: imageName)
+        guard let image = UIImage(named: imageName) else { return }
+        
+        // Store original images
+        if isFrontSide {
+            originalFrontImage = image
+        } else {
+            originalBackImage = image
+        }
+        
+        // Apply color blend to the image
+        updateColorBlend()
     }
     
     @objc private func saveButtonTapped() {
         // Handle save action
         print("Save button tapped")
         // Add your save logic here
+    }
+    
+    // MARK: - Color Picker Setup
+    private func setupColorOptions() {
+        // Clear existing color options
+        colorPickerStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        
+        // Create color option views
+        for color in ProductColor.allCases {
+            let colorOptionView = createColorOptionView(for: color)
+            colorPickerStackView.addArrangedSubview(colorOptionView)
+        }
+        
+        // Update initial selection
+        updateColorSelection()
+    }
+    
+    private func createColorOptionView(for productColor: ProductColor) -> UIView {
+        let containerView = UIView()
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Create circular color view
+        let colorCircle = UIView()
+        colorCircle.backgroundColor = productColor.uiColor
+        colorCircle.layer.cornerRadius = 25 // Will be set to 50/2
+        colorCircle.layer.borderWidth = 1
+        colorCircle.layer.borderColor = UIColor.gray.withAlphaComponent(0.3).cgColor
+        colorCircle.translatesAutoresizingMaskIntoConstraints = false
+        colorCircle.tag = 100 // Tag to identify color circle
+        
+        // Color circle button (overlay for tap)
+        let colorButton = UIButton(type: .custom)
+        colorButton.translatesAutoresizingMaskIntoConstraints = false
+        colorButton.tag = ProductColor.allCases.firstIndex(of: productColor) ?? 0
+        colorButton.addTarget(self, action: #selector(colorOptionTapped(_:)), for: .touchUpInside)
+        colorButton.backgroundColor = .clear
+        
+        // Label
+        let label = UILabel()
+        label.text = productColor.rawValue
+        label.font = UIFont.systemFont(ofSize: 12)
+        label.textColor = .label
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        
+        containerView.addSubview(colorCircle)
+        containerView.addSubview(colorButton)
+        containerView.addSubview(label)
+        
+        NSLayoutConstraint.activate([
+            // Container fills available height from stack view
+            containerView.widthAnchor.constraint(equalToConstant: 50),
+            
+            // Color circle fixed size at top
+            colorCircle.topAnchor.constraint(equalTo: containerView.topAnchor),
+            colorCircle.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            colorCircle.widthAnchor.constraint(equalToConstant: 50),
+            colorCircle.heightAnchor.constraint(equalToConstant: 50),
+            
+            // Color button matches circle for tap area
+            colorButton.topAnchor.constraint(equalTo: containerView.topAnchor),
+            colorButton.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            colorButton.widthAnchor.constraint(equalToConstant: 50),
+            colorButton.heightAnchor.constraint(equalToConstant: 50),
+            
+            // Label fixed below circle, container expands to fill remaining space
+            label.topAnchor.constraint(equalTo: colorCircle.bottomAnchor, constant: 8),
+            label.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            label.bottomAnchor.constraint(lessThanOrEqualTo: containerView.bottomAnchor),
+        ])
+        
+        return containerView
+    }
+    
+    @objc private func colorOptionTapped(_ sender: UIButton) {
+        let index = sender.tag
+        guard index < ProductColor.allCases.count else { return }
+        
+        let selectedColor = ProductColor.allCases[index]
+        selectedProductColor = selectedColor
+        updateColorSelection()
+        updateColorBlend()
+    }
+    
+    private func updateColorSelection() {
+        let stackViewSubviews = colorPickerStackView.arrangedSubviews
+        
+        for (index, containerView) in stackViewSubviews.enumerated() {
+            guard index < ProductColor.allCases.count else { continue }
+            
+            let productColor = ProductColor.allCases[index]
+            let isSelected = productColor == selectedProductColor
+            
+            // Find the color circle view by tag
+            if let colorCircle = containerView.viewWithTag(100) {
+                colorCircle.layer.borderWidth = isSelected ? 3 : 1
+                colorCircle.layer.borderColor = isSelected ? UIColor.blue.cgColor : UIColor.gray.withAlphaComponent(0.3).cgColor
+                
+                // Adjust size for selected state
+                UIView.animate(withDuration: 0.2) {
+                    if isSelected {
+                        colorCircle.transform = CGAffineTransform(scaleX: 0.92, y: 0.92) // 46/50 = 0.92
+                    } else {
+                        colorCircle.transform = .identity
+                    }
+                }
+            }
+        }
+    }
+    
+    private func updateColorBlend() {
+        // Get the original image for the current side
+        guard let originalImage = isFrontSide ? originalFrontImage : originalBackImage else {
+            // If original not stored yet, get it from the image view
+            let imageName = isFrontSide ? "front_outline" : "back_outline"
+            guard let image = UIImage(named: imageName) else { return }
+            if isFrontSide {
+                originalFrontImage = image
+            } else {
+                originalBackImage = image
+            }
+            return updateColorBlend() // Retry after storing
+        }
+        
+        // Add background color layer behind the image content
+        canvasBackgroundImageView.image = originalImage.withBackground(color: selectedProductColor.uiColor)
+    }
+}
+
+extension UIImage {
+    func withBackground(color: UIColor, opaque: Bool = true) -> UIImage {
+        UIGraphicsBeginImageContextWithOptions(size, opaque, scale)
+        
+        guard let context = UIGraphicsGetCurrentContext(),
+              let image = cgImage else { return self }
+        
+        let rect = CGRect(origin: .zero, size: size)
+        context.setFillColor(color.cgColor)
+        context.fill(rect)
+        context.concatenate(CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: size.height))
+        context.draw(image, in: rect)
+        
+        return UIGraphicsGetImageFromCurrentImageContext() ?? self
+    }
+}
+
+// MARK: - ProductColor UIColor Extension
+extension ProductColor {
+    var uiColor: UIColor {
+        switch self {
+        case .white:
+            return .white
+        case .black:
+            return .black
+        case .navy:
+            return UIColor(red: 0.0, green: 0.0, blue: 0.5, alpha: 1.0)
+        case .red:
+            return .red
+        case .blue:
+            return .blue
+        case .gray:
+            return .gray
+        }
     }
 }
 
