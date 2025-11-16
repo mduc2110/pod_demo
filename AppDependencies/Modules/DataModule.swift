@@ -1,4 +1,5 @@
 import Foundation
+import Alamofire
 
 public class DataModule: DependencyModule {
 
@@ -17,8 +18,23 @@ public class DataModule: DependencyModule {
         AppDependencies.dataModule = self
     }
 
+    internal func getProcessorFactory() -> ApiProcessorFactory {
+        let configuration = URLSessionConfiguration.default
+        configuration.urlCache = nil
+        configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
+
+        return ApiProcessorFactory(
+            session: Session(configuration: configuration),
+            responseInterceptor: provideApiResponseInterceptor(),
+        )
+    }
     // Provide components
     internal func provideApiResponseInterceptor() -> ApiResponseInterceptor {
         apiResponseInterceptor
+    }
+    
+    
+    func getMeshService() -> MeshService {
+        return MeshService(url: baseURL, factory: getProcessorFactory())
     }
 }

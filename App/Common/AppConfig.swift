@@ -16,5 +16,5 @@ public class AppConfig {
         )
     }
 
-    public static var BASE_URL: String = ""
+    public static var BASE_URL: String = "http://localhost:8000/"
 }

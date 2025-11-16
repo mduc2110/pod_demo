@@ -11,4 +11,8 @@ public final class AppDependencies {
     static func getDataPortProvider() -> DataPortProvider {
         commonModule.provideDataPortProvider()
     }
+    
+    static func getMeshService() -> MeshService {
+        dataModule.getMeshService()
+    }
 }

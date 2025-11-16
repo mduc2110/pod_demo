@@ -48,7 +48,7 @@ class ImageItem {
 }
 
 class DemoViewController: UIViewController {
-    
+    let service = AppDependencies.getMeshService()
     // Top bar container
     private let topBarView: UIView = {
         let view = UIView()
@@ -175,6 +175,11 @@ class DemoViewController: UIViewController {
         hapticGenerator.prepare()
         setupUI()
         updateModeAppearance()
+        
+//        Task {
+//            try await service.healthCheck()
+//        }
+        
     }
     
     private func setupUI() {
@@ -599,9 +604,43 @@ class DemoViewController: UIViewController {
     }
     
     @objc private func saveButtonTapped() {
-        // Handle save action
-        print("Save button tapped")
-        // Add your save logic here
+        // Capture the canvas snapshot
+        guard let snapshot = captureCanvasSnapshot() else {
+            let alert = UIAlertController(title: "Error", message: "Failed to capture canvas snapshot", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+            return
+        }
+
+        Task {
+            if let data = snapshot.jpegData(compressionQuality: 0.8) {
+                let result = try await service.getFinalResult(stickerImage: data)
+
+                Task { @MainActor in
+                    let resultVC = ResultViewController.newInstance(imageUrl: result.imageUrl)
+                    present(resultVC, animated: true)
+                }
+            }
+        }
+    }
+    
+    /// Captures a snapshot of the canvas view including all images inside it
+    /// - Returns: A UIImage containing the rendered canvas, or nil if capture fails
+    func captureCanvasSnapshot() -> UIImage? {
+        // Ensure layout is up to date
+        canvasView.layoutIfNeeded()
+        
+        // Get the bounds of the canvas
+        let bounds = canvasView.bounds
+        
+        // Use UIGraphicsImageRenderer for iOS 10+
+        let renderer = UIGraphicsImageRenderer(bounds: bounds)
+        let image = renderer.image { context in
+            // Render the canvas view and all its subviews
+            canvasView.layer.render(in: context.cgContext)
+        }
+        
+        return image
     }
 }
 
@@ -643,4 +682,3 @@ extension DemoViewController: UIGestureRecognizerDelegate {
         return true
     }
 }
-

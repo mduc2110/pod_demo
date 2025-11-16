@@ -70,6 +70,7 @@
 		678ABEC82EC8899100D1E8A3 = {
 			isa = PBXGroup;
 			children = (
+				80E8A1F72ECA2C7A008D3E40 /* Domain */,
 				678ABED32EC8899100D1E8A3 /* App */,
 				678ABFC12EC8909400D1E8A3 /* AppDependencies */,
 				678ABFC02EC8906C00D1E8A3 /* Common */,
@@ -85,6 +86,13 @@
 				678ABED12EC8899100D1E8A3 /* PrintOnDemand.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		80E8A1F72ECA2C7A008D3E40 /* Domain */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Domain;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
