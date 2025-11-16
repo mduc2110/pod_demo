@@ -56,7 +56,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     private func installNavigationController() {
         let navigationController = UINavigationController(
-            rootViewController: MainViewController()
+            rootViewController: DemoViewController()
         )
 
         navigationController.navigationBar.isHidden = true

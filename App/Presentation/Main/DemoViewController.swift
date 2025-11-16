@@ -19,7 +19,7 @@ class ImageItem {
     
     private let selectionBorder: CALayer = {
         let layer = CALayer()
-        layer.borderColor = UIColor.systemBlue.cgColor
+        layer.borderColor = UIColor.blue.cgColor
         layer.borderWidth = 3.0
         layer.cornerRadius = 4.0
         layer.isHidden = true
@@ -49,14 +49,98 @@ class ImageItem {
 
 class DemoViewController: UIViewController {
     
-    // Canvas container view
-    private let canvasView: UIView = {
+    // Top bar container
+    private let topBarView: UIView = {
         let view = UIView()
         view.backgroundColor = .white
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    // Edit/Preview segmented control
+    private lazy var editPreviewSegmentedControl: UISegmentedControl = {
+        // Create with empty strings, we'll use images only
+        let control = UISegmentedControl(items: ["", ""])
+        control.selectedSegmentIndex = 0
+        control.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Set custom images for segments
+        let editImage = UIImage(systemName: "pencil")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
+        let previewImage = UIImage(systemName: "eye")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
+        
+        // Customize appearance
+        control.selectedSegmentTintColor = .blue
+        control.backgroundColor = .white
+        
+        // Set image tint colors - Edit selected (light beige), Preview unselected (dark brown)
+        control.setImage(editImage?.withTintColor(UIColor(red: 0.96, green: 0.95, blue: 0.93, alpha: 1.0), renderingMode: .alwaysOriginal), forSegmentAt: 0)
+        control.setImage(previewImage?.withTintColor(UIColor(red: 0.4, green: 0.3, blue: 0.2, alpha: 1.0), renderingMode: .alwaysOriginal), forSegmentAt: 1)
+        
+        // Remove divider
+        control.setDividerImage(UIImage(), forLeftSegmentState: .normal, rightSegmentState: .normal, barMetrics: .default)
+        
+        return control
+    }()
+    
+    // Save button
+    private let saveButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("Save", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        button.backgroundColor = UIColor(red: 0.96, green: 0.95, blue: 0.93, alpha: 1.0) // Light beige
+        button.setTitleColor(UIColor(red: 0.4, green: 0.3, blue: 0.2, alpha: 1.0), for: .normal)
+        button.layer.cornerRadius = 8.0
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    
+    // Divider between top bar and body
+    private let dividerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor(red: 0.9, green: 0.9, blue: 0.9, alpha: 1.0)
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    // Front/Back segmented control (only visible in Edit mode)
+    private let frontBackSegmentedControl: UISegmentedControl = {
+        let control = UISegmentedControl(items: ["Front side", "Back side"])
+        control.selectedSegmentIndex = 0 // Default to Front side
+        control.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Customize appearance
+        control.selectedSegmentTintColor = .blue
+        control.setTitleTextAttributes([
+            .foregroundColor: UIColor.white,
+            .font: UIFont.systemFont(ofSize: 14, weight: .medium)
+        ], for: .selected)
+        control.setTitleTextAttributes([
+            .foregroundColor: UIColor(red: 0.4, green: 0.3, blue: 0.2, alpha: 1.0), // Dark brown
+            .font: UIFont.systemFont(ofSize: 14, weight: .medium)
+        ], for: .normal)
+        control.backgroundColor = UIColor(red: 0.96, green: 0.95, blue: 0.93, alpha: 1.0) // Light beige
+        
+        return control
+    }()
+    
+    // Background image view for canvas (shirt outline)
+    private let canvasBackgroundImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.isUserInteractionEnabled = false
+        imageView.contentMode = .scaleAspectFit
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
+    }()
+    
+    // Canvas container view (positioned inside the design area of the shirt)
+    private let canvasView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
         view.layer.borderColor = UIColor.gray.cgColor
         view.layer.borderWidth = 2.0
         view.layer.cornerRadius = 8.0
         view.clipsToBounds = true
+        view.isUserInteractionEnabled = true
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -66,7 +150,7 @@ class DemoViewController: UIViewController {
         let button = UIButton(type: .system)
         button.setTitle("Select Images from Gallery", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.backgroundColor = .systemBlue
+        button.backgroundColor = .blue
         button.setTitleColor(.white, for: .normal)
         button.layer.cornerRadius = 8.0
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -77,6 +161,12 @@ class DemoViewController: UIViewController {
     private var imageItems: [ImageItem] = []
     private var selectedImageItem: ImageItem?
     
+    // Current mode: Edit or Preview
+    private var isEditMode: Bool = true
+    
+    // Current side: Front or Back
+    private var isFrontSide: Bool = true
+    
     // Haptic feedback generator
     private let hapticGenerator = UIImpactFeedbackGenerator(style: .light)
 
@@ -84,30 +174,94 @@ class DemoViewController: UIViewController {
         super.viewDidLoad()
         hapticGenerator.prepare()
         setupUI()
+        updateModeAppearance()
     }
     
     private func setupUI() {
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .white
         
-        // Add canvas view
-        view.addSubview(canvasView)
+        // Add top bar
+        view.addSubview(topBarView)
         NSLayoutConstraint.activate([
-            canvasView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            canvasView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -50),
-            canvasView.widthAnchor.constraint(equalToConstant: 300),
-            canvasView.heightAnchor.constraint(equalToConstant: 300)
+            topBarView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            topBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            topBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            topBarView.heightAnchor.constraint(equalToConstant: 60)
         ])
         
+        // Add segmented control to top bar
+        topBarView.addSubview(editPreviewSegmentedControl)
+        NSLayoutConstraint.activate([
+            editPreviewSegmentedControl.centerXAnchor.constraint(equalTo: topBarView.centerXAnchor),
+            editPreviewSegmentedControl.centerYAnchor.constraint(equalTo: topBarView.centerYAnchor),
+            editPreviewSegmentedControl.widthAnchor.constraint(equalToConstant: 120),
+            editPreviewSegmentedControl.heightAnchor.constraint(equalToConstant: 32)
+        ])
+        
+        // Add save button to top bar
+        topBarView.addSubview(saveButton)
+        NSLayoutConstraint.activate([
+            saveButton.trailingAnchor.constraint(equalTo: topBarView.trailingAnchor, constant: -16),
+            saveButton.centerYAnchor.constraint(equalTo: topBarView.centerYAnchor),
+            saveButton.widthAnchor.constraint(equalToConstant: 70),
+            saveButton.heightAnchor.constraint(equalToConstant: 36)
+        ])
+        
+        // Add divider below top bar
+        view.addSubview(dividerView)
+        NSLayoutConstraint.activate([
+            dividerView.topAnchor.constraint(equalTo: topBarView.bottomAnchor),
+            dividerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            dividerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            dividerView.heightAnchor.constraint(equalToConstant: 1)
+        ])
+
+        // Add Front/Back segmented control (only visible in Edit mode)
+        view.addSubview(frontBackSegmentedControl)
+        NSLayoutConstraint.activate([
+            frontBackSegmentedControl.topAnchor.constraint(equalTo: dividerView.bottomAnchor, constant: 16),
+            frontBackSegmentedControl.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            frontBackSegmentedControl.widthAnchor.constraint(equalToConstant: 200),
+            frontBackSegmentedControl.heightAnchor.constraint(equalToConstant: 32)
+        ])
+
         // Add select image button
         view.addSubview(selectImageButton)
         NSLayoutConstraint.activate([
-            selectImageButton.topAnchor.constraint(equalTo: canvasView.bottomAnchor, constant: 30),
+            selectImageButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -32),
             selectImageButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             selectImageButton.widthAnchor.constraint(equalToConstant: 280),
-            selectImageButton.heightAnchor.constraint(equalToConstant: 44)
+            selectImageButton.heightAnchor.constraint(equalToConstant: 44),
         ])
-        
+
+        // Add background image view to shirt container (shirt outline)
+        view.addSubview(canvasBackgroundImageView)
+        NSLayoutConstraint.activate([
+            canvasBackgroundImageView.topAnchor.constraint(equalTo: frontBackSegmentedControl.bottomAnchor, constant: 20),
+            canvasBackgroundImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            canvasBackgroundImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            canvasBackgroundImageView.bottomAnchor.constraint(equalTo: selectImageButton.topAnchor, constant: -20),
+        ])
+
+        // Add canvas view directly to main view (not as subview of background image)
+        // This ensures it can receive touches properly
+        view.addSubview(canvasView)
+        NSLayoutConstraint.activate([
+            canvasView.centerXAnchor.constraint(equalTo: canvasBackgroundImageView.centerXAnchor),
+            canvasView.centerYAnchor.constraint(equalTo: canvasBackgroundImageView.centerYAnchor, constant: -20), // Slightly above center to match design area
+            canvasView.widthAnchor.constraint(equalToConstant: 200),
+            canvasView.heightAnchor.constraint(equalToConstant: 200),
+        ])
+
+        // Add targets
         selectImageButton.addTarget(self, action: #selector(selectImageTapped), for: .touchUpInside)
+        editPreviewSegmentedControl.addTarget(self, action: #selector(editPreviewChanged(_:)), for: .valueChanged)
+        frontBackSegmentedControl.addTarget(self, action: #selector(frontBackChanged(_:)), for: .valueChanged)
+        saveButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
+        
+        // Set initial background image
+        updateCanvasBackground()
+        updateFrontBackVisibility()
     }
     
     private func setupGestures(for imageItem: ImageItem) {
@@ -401,6 +555,53 @@ class DemoViewController: UIViewController {
         let rotationTransform = CGAffineTransform(rotationAngle: imageItem.currentRotation)
         view.transform = scaleTransform.concatenating(rotationTransform)
         imageItem.updateSelectionBorderFrame()
+    }
+    
+    @objc private func editPreviewChanged(_ sender: UISegmentedControl) {
+        isEditMode = sender.selectedSegmentIndex == 0
+        updateModeAppearance()
+        updateFrontBackVisibility()
+    }
+    
+    @objc private func frontBackChanged(_ sender: UISegmentedControl) {
+        isFrontSide = sender.selectedSegmentIndex == 0
+        updateCanvasBackground()
+    }
+    
+    private func updateModeAppearance() {
+        // Update segmented control appearance based on selection
+        let editImage = UIImage(systemName: "pencil")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
+        let previewImage = UIImage(systemName: "eye")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
+        
+        let lightBeige = UIColor(red: 0.96, green: 0.95, blue: 0.93, alpha: 1.0)
+        let darkBrown = UIColor(red: 0.4, green: 0.3, blue: 0.2, alpha: 1.0)
+        
+        if isEditMode {
+            // Edit mode selected - Edit icon light beige, Preview icon dark brown
+            editPreviewSegmentedControl.setImage(editImage?.withTintColor(lightBeige, renderingMode: .alwaysOriginal), forSegmentAt: 0)
+            editPreviewSegmentedControl.setImage(previewImage?.withTintColor(darkBrown, renderingMode: .alwaysOriginal), forSegmentAt: 1)
+        } else {
+            // Preview mode selected - Edit icon dark brown, Preview icon light beige
+            editPreviewSegmentedControl.setImage(editImage?.withTintColor(darkBrown, renderingMode: .alwaysOriginal), forSegmentAt: 0)
+            editPreviewSegmentedControl.setImage(previewImage?.withTintColor(lightBeige, renderingMode: .alwaysOriginal), forSegmentAt: 1)
+        }
+    }
+    
+    private func updateFrontBackVisibility() {
+        // Show Front/Back segmented control only in Edit mode
+        frontBackSegmentedControl.isHidden = !isEditMode
+    }
+    
+    private func updateCanvasBackground() {
+        // Update canvas background image based on selected side
+        let imageName = isFrontSide ? "front_outline" : "back_outline"
+        canvasBackgroundImageView.image = UIImage(named: imageName)
+    }
+    
+    @objc private func saveButtonTapped() {
+        // Handle save action
+        print("Save button tapped")
+        // Add your save logic here
     }
 }
 
